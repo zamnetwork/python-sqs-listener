@@ -1,4 +1,4 @@
-name: Docker build & push
+name: Publish
 
 on:
   push:
@@ -6,9 +6,9 @@ on:
 
 jobs:
 
-  build:
+  publish:
 
-    runs-on: [self-hosted, python3.7x]
+    runs-on: [self-hosted, python37x]
 
     steps:
     - run: |
