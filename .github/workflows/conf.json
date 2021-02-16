@@ -1,7 +1,0 @@
-{
-    "sonarqube": {
-        "url": "https://sonarqube.k8s.zam.com",
-        "projectKey": "zam_py_vault",
-        "projectName": "Python SQS List"
-    }
-}

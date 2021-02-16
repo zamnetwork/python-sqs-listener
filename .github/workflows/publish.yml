@@ -2,7 +2,7 @@ name: Docker build & push
 
 on:
   push:
-    tags: [ v*-stage, v*-prod ]
+    tags: [ v* ]
 
 jobs:
 
