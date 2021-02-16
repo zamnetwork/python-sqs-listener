@@ -8,3 +8,5 @@ build
 dist
 pySqsListener.egg-info
 test_listen.py
+conda.env.yml
+node_modules

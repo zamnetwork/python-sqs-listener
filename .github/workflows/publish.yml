@@ -1,0 +1,70 @@
+name: Docker build & push
+
+on:
+  push:
+    tags: [ v*-stage, v*-prod ]
+
+jobs:
+
+  build:
+
+    runs-on: [self-hosted, python3.7x]
+
+    steps:
+    - run: |
+          echo "SLACK_WEBHOOK_URL=$(cat /vault/secrets/slack)" >> $GITHUB_ENV
+    - uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        fields: repo,message,commit,author,ref,job,took
+      env:
+        SLACK_WEBHOOK_URL: ${{ env.SLACK_WEBHOOK_URL }}
+      if: always()
+
+
+    - name: Check out this repo
+      uses: actions/checkout@v2
+
+    - name: Load aws.json
+      id: load_aws_creds
+      run: |
+          content=`cat /vault/secrets/aws.json`
+          # the following lines are only required for multi line json
+          content="${content//'%'/'%25'}"
+          content="${content//$'\n'/'%0A'}"
+          content="${content//$'\r'/'%0D'}"
+          # end of optional handling for multi line json
+          echo "::set-output name=aws_creds::$content"
+
+    - name: Load fanbyte-pypi.json
+      id: load_pypi_creds
+      run: |
+          content=`cat /vault/secrets/fanbyte-pypi.json`
+          # the following lines are only required for multi line json
+          content="${content//'%'/'%25'}"
+          content="${content//$'\n'/'%0A'}"
+          content="${content//$'\r'/'%0D'}"
+          # end of optional handling for multi line json
+          echo "::set-output name=pypi_creds::$content"
+
+    - name: Set env
+      run: |
+          echo "GITHUB_SOURCE_NAME=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV 
+          echo "GITHUB_SOURCE_BRANCH=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+          echo "GITHUB_SOURCE_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          echo "AWS_ACCESS_KEY_ID=${{fromJson(steps.load_aws_creds.outputs.aws_creds).accessKeyId}}" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=${{fromJson(steps.load_aws_creds.outputs.aws_creds).secretAccessKey}}" >> $GITHUB_ENV
+
+    - name: Setup conda
+      uses: conda-incubator/setup-miniconda@v2
+      env:
+          CONDA: "/miniconda"
+    
+    - name: Setup ./devenv.sh and publish
+      shell: bash -l {0}
+      run: |
+        ./devenv.sh
+        conda activate python-sqs-listener
+        ./publish.sh
+
+
