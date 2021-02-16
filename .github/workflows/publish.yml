@@ -8,7 +8,7 @@ jobs:
 
   publish:
 
-    runs-on: [self-hosted, python37x]
+    runs-on: [python37x]
 
     steps:
     - run: |
